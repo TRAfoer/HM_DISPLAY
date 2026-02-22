@@ -1,424 +1,538 @@
 <!DOCTYPE html>
 <html lang="zh">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HM CLOCK</title>
+  <title>DLG-CLOCK 开发者终端</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- Tailwind 配置 -->
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#3B82F6',
-            secondary: '#10B981',
-            accent: '#8B5CF6',
-            warning: '#F59E0B',
-            danger: '#EF4444',
-            dark: '#1E293B',
-            light: '#F8FAFC'
-          },
-          fontFamily: {
-            inter: ['Inter', 'sans-serif'],
-          },
-        },
-      }
-    }
-  </script>
-  
+  <script src="https://cdn.sheetjs.com/crc-32-latest/package/crc32.js"></script>
   <style type="text/tailwindcss">
     @layer utilities {
-      .content-auto {
-        content-visibility: auto;
-      }
-      .btn-hover {
-        @apply transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5;
-      }
-      .card-effect {
-        @apply bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300;
-      }
-      .text-gradient {
-        @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
-      }
-    }
-  </style>
-  
-  <style>
-    body { 
-      font-family: 'Inter', sans-serif;
-      background-color: #f0f9ff;
-      background-image: 
-        radial-gradient(at 40% 20%, rgba(59, 130, 246, 0.05) 0px, transparent 50%),
-        radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.05) 0px, transparent 50%),
-        radial-gradient(at 0% 50%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
-    }
-    
-    .log-entry {
-      animation: fadeIn 0.3s ease-in-out;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(5px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .pulse {
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
+      .btn-hover { @apply transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0; }
+      .card-style { @apply bg-white border border-slate-200 rounded-2xl shadow-sm p-5; }
     }
   </style>
 </head>
 
-<body class="min-h-screen p-4 md:p-6 flex justify-center items-start font-inter text-dark">
-  <div class="w-full max-w-4xl">
-    <!-- 头部标题 -->
-    <header class="mb-6 text-center">
-      <h1 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-gradient mb-2">HM CLOCK 控制中心</h1>
-    </header>
-    
-    <!-- 主内容卡片 -->
-    <div class="card-effect p-5 md:p-6 space-y-6">
-      <!-- 控制按钮区域 -->
-      <div class="flex flex-wrap gap-3 md:gap-4">
-        <button id="connect-button" class="bg-primary text-white px-5 py-2.5 rounded-lg flex items-center gap-2 btn-hover font-medium">
-          <i class="fa fa-bluetooth"></i> 连接设备
-        </button>
-        <button id="setime-button" class="bg-warning text-white px-5 py-2.5 rounded-lg flex items-center gap-2 btn-hover font-medium opacity-50 cursor-not-allowed" disabled>
-          <i class="fa fa-clock-o"></i> 同步时间
-        </button>
-        <button id="upfirm-button" class="bg-accent text-white px-5 py-2.5 rounded-lg flex items-center gap-2 btn-hover font-medium opacity-50 cursor-not-allowed" disabled>
-          <i class="fa fa-refresh"></i> 固件升级
-        </button>
-        <button id="send90-button" class="bg-secondary text-white px-5 py-2.5 rounded-lg flex items-center gap-2 btn-hover font-medium opacity-50 cursor-not-allowed" disabled>
-          <i class="fa fa-send"></i> 切换时制
-        </button>
-        <button id="calibration-button" class="bg-secondary text-white px-5 py-2.5 rounded-lg flex items-center gap-2 btn-hover font-medium opacity-50 cursor-not-allowed" disabled>
-          <i class="fa fa-wrench"></i> 时间校准
-        </button>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen pb-10">
+
+  <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 px-4 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">D</div>
+      <span class="font-bold text-lg tracking-tight">DLG-CLOCK <span
+          class="text-blue-600 text-xs">Visualizer</span></span>
+    </div>
+    <button id="connect-button"
+      class="bg-blue-600 text-white px-5 py-2 rounded-xl flex items-center gap-2 btn-hover font-medium">
+      <i class="fa fa-bluetooth"></i> 连接设备
+    </button>
+  </nav>
+
+  <main class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <div class="lg:col-span-4 space-y-6">
+      <div class="card-style bg-slate-900 text-white border-none">
+        <h2 class="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest">设备状态</h2>
+        <div class="space-y-3 text-sm">
+          <div class="flex justify-between"><span>设备名称</span><span id="device_name"
+              class="font-mono text-blue-400">未连接</span></div>
+          <div class="flex justify-between"><span>实时电压</span><span id="current_voltage"
+              class="font-bold text-green-400">--.- V</span></div>
+          <div class="pt-2 border-t border-slate-700 font-mono text-2xl text-center" id="current_time">00:00:00</div>
+
+        </div>
       </div>
-      
-      <!-- 设备信息区域 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-            <i class="fa fa-microchip"></i>
-          </div>
-          <div>
-            <p class="text-gray-500 text-sm">设备名称</p>
-            <p id="device_name" class="font-semibold">未连接</p>
-          </div>
-        </div>
-        
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center text-warning">
-            <i class="fa fa-bolt"></i>
-          </div>
-          <div>
-            <p class="text-gray-500 text-sm">当前电压</p>
-            <p id="current_voltage" class="font-semibold">--.- V</p>
+
+      <div class="card-style">
+        <h2 class="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest flex justify-between">
+          1bpp 实时预览 <i class="fa fa-eye"></i>
+        </h2>
+        <div id="preview-box"
+          class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl overflow-hidden min-h-[140px] flex items-center justify-center relative">
+          <img id="live-preview-img" class="max-w-full h-auto hidden shadow-sm" />
+          <div id="preview-placeholder" class="text-slate-300 text-xs text-center p-4">
+            <i class="fa fa-image text-2xl mb-2 block"></i>
+            添加图片积木后在此预览转换效果
           </div>
         </div>
-        
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
-            <i class="fa fa-calendar"></i>
-          </div>
-          <div>
-            <p class="text-gray-500 text-sm">设备时间</p>
-            <p id="current_time" class="font-semibold">--:--:--</p>
-          </div>
+        <div id="img-meta" class="mt-2 text-[10px] text-slate-400 text-center hidden"></div>
+      </div>
+
+      <div class="card-style space-y-2">
+        <h2 class="text-xs font-bold text-slate-400 uppercase mb-3 tracking-widest">快捷功能</h2>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="setime-button" disabled
+            class="py-2 bg-slate-100 rounded-lg text-xs btn-hover hover:bg-blue-50">同步时间</button>
+          <button id="upfirm-button" disabled
+            class="py-2 bg-slate-100 rounded-lg text-xs btn-hover hover:bg-purple-50">固件升级</button>
+          <button id="send90-button" disabled class="py-2 bg-slate-100 rounded-lg text-xs btn-hover">12/24H切换</button>
+          <button id="calibration-button" disabled class="py-2 bg-slate-100 rounded-lg text-xs btn-hover">时间校准</button>
         </div>
-        
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent">
-            <i class="fa fa-laptop"></i>
-          </div>
-          <div>
-            <p class="text-gray-500 text-sm">系统时间</p>
-            <p id="system_time" class="font-semibold">加载中...</p>
+        <div id="progress-area" class="mt-2 hidden">
+          <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+            <div id="bar" class="bg-blue-600 h-full w-0"></div>
           </div>
         </div>
       </div>
-      
-      <!-- 进度条区域 -->
-      <div id="progress-container" class="hidden">
-        <p class="text-sm font-medium text-gray-600 mb-1">固件升级进度</p>
-        <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-          <div id="update_progress_bar" class="h-full bg-gradient-to-r from-primary to-accent w-0 transition-all duration-300"></div>
-        </div>
-        <p id="update_progress_text" class="text-xs text-gray-500 mt-1">0%</p>
-        <div id="update_progress" class="hidden"></div>
-      </div>
-      
-      <!-- 日志终端区域 -->
-      <div class="space-y-2">
-        <div class="flex justify-between items-center">
-          <h3 class="font-semibold text-gray-700 flex items-center gap-2">
-            <i class="fa fa-terminal text-primary"></i> 设备日志
-          </h3>
-          <button id="clear-log-btn" class="text-xs text-gray-500 hover:text-danger transition-colors">
-            <i class="fa fa-trash-o"></i> 清空日志
-          </button>
-        </div>
-        
-        <div id="log-window" class="bg-gray-900 text-gray-100 text-xs md:text-sm rounded-lg h-48 md:h-64 overflow-y-auto p-3 font-mono">
-          <div class="text-gray-400 log-entry">终端已启动，等待设备连接...</div>
+      <div class="card-style">
+        <h2 class="text-xs font-bold text-slate-400 uppercase mb-3 tracking-widest">调试控制台 (多行支持)</h2>
+        <div class="space-y-3">
+          <textarea id="raw-hex-input" rows="4" placeholder="输入多行 HEX 指令&#10;93&#10;94 0b 00 00 10 10 00&#10;95 96"
+            class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono outline-none focus:border-blue-400 block"></textarea>
+
+          <div class="flex justify-between items-center">
+            <span class="text-[10px] text-slate-400">支持换行符，将按顺序执行</span>
+            <button id="send-raw-btn"
+              class="bg-slate-800 text-white px-6 py-2 rounded-xl text-xs font-bold btn-hover shadow-md">
+              <i class="fa fa-paper-plane"></i> 批量发送
+            </button>
+          </div>
         </div>
       </div>
     </div>
-    
-    <!-- 页脚信息 -->
-    <footer class="mt-6 text-center text-xs text-gray-500">
-      <p>HM CLOCK蓝牙控制工具 &copy; https://github.com/tpunix/HMCLOCK</p>
-    </footer>
-  </div>
+    <!-- 进度条区域 -->
+    <div id="progress-container" class="hidden">
+      <p class="text-sm font-medium text-gray-600 mb-1">固件升级进度</p>
+      <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div id="update_progress_bar"
+          class="h-full bg-gradient-to-r from-primary to-accent w-0 transition-all duration-300"></div>
+      </div>
+      <p id="update_progress_text" class="text-xs text-gray-500 mt-1">0%</p>
+      <div id="update_progress" class="hidden"></div>
+    </div>
+    <div class="lg:col-span-8 space-y-6">
+      <div class="card-style min-h-[600px] flex flex-col">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-lg font-bold">指令流水线</h2>
+          <div class="flex gap-2">
+            <button id="run-sequence-btn"
+              class="bg-green-600 text-white px-6 py-2 rounded-xl font-bold btn-hover flex items-center gap-2 shadow-md">
+              <i class="fa fa-play"></i> 顺序执行
+            </button>
+            <button id="export-btn"
+              class="text-blue-600 border border-blue-200 px-3 py-1 rounded-lg text-xs hover:bg-blue-50">导出配置</button>
+            <button id="import-btn"
+              class="text-purple-600 border border-purple-200 px-3 py-1 rounded-lg text-xs hover:bg-purple-50">导入配置</button>
+            <button id="clear-btn" class="text-slate-400 hover:text-red-500 text-sm px-2">清空</button>
+          </div>
+        </div>
 
-  <script src="https://cdn.sheetjs.com/crc-32-latest/package/crc32.js"></script>
-  
+        <div class="flex flex-wrap gap-3 mb-6 p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
+          <select id="cmd-selector" class="bg-white border border-blue-200 rounded-xl px-4 py-2 text-sm outline-none">
+            <option value="0x0b">0x0b | 画线</option>
+            <option value="0x0c">0x0c | 空心矩形</option>
+            <option value="0x0d">0x0d | 实心矩形</option>
+            <option value="0x0e">0x0e | 绘制文字</option>
+            <option value="0x0f">0x0f | 绘制图片</option>
+            <option value="0x1a">0x1a | 绘制三角形</option>
+            <option value="0xfe"> | 渲染位图文字</option>
+            <option value="0xff"> | 自定义命令</option>
+          </select>
+          <button id="add-task-btn" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold btn-hover shadow-sm">+
+            添加指令</button>
+        </div>
+
+        <div id="task-container" class="flex-grow space-y-3 overflow-y-auto pr-2 max-h-[500px]">
+        </div>
+
+        <div id="log-window"
+          class="mt-6 bg-slate-900 rounded-xl p-4 h-32 overflow-y-auto font-mono text-[10px] text-blue-400/80 border border-slate-800">
+          <div>> 系统就绪，等待连接 DLG-CLOCK...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <canvas id="calc-canvas" class="hidden"></canvas>
+
   <script>
-    // 系统时间更新
-    function updateSystemTime() {
-      const now = new Date();
-      const timeString = now.toLocaleTimeString('zh-CN', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-      const dateString = now.toLocaleDateString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      });
-      document.getElementById('system_time').textContent = `${dateString} ${timeString}`;
-    }
-    
-    // 初始化更新系统时间并设置定时器
-    updateSystemTime();
-    setInterval(updateSystemTime, 1000);
-    
-    // 日志系统
-    const logWindow = document.getElementById('log-window');
-    const clearLogBtn = document.getElementById('clear-log-btn');
-    
-    // 自定义日志函数
-    function log(message, type = 'info') {
-      const timestamp = new Date().toLocaleTimeString('zh-CN', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-      
-      const logLine = document.createElement('div');
-      logLine.className = 'log-entry mb-1 border-b border-gray-800 pb-1';
-      
-      let typeIcon = '';
-      let typeColor = '';
-      
-      switch(type) {
-        case 'success':
-          typeIcon = '<span class="text-green-400 mr-1"><i class="fa fa-check-circle"></i></span>';
-          typeColor = 'text-green-300';
-          break;
-        case 'error':
-          typeIcon = '<span class="text-red-400 mr-1"><i class="fa fa-exclamation-circle"></i></span>';
-          typeColor = 'text-red-300';
-          break;
-        case 'warning':
-          typeIcon = '<span class="text-yellow-400 mr-1"><i class="fa fa-exclamation-triangle"></i></span>';
-          typeColor = 'text-yellow-300';
-          break;
-        case 'info':
-        default:
-          typeIcon = '<span class="text-blue-400 mr-1"><i class="fa fa-info-circle"></i></span>';
-          typeColor = 'text-gray-300';
-      }
-      
-      logLine.innerHTML = `<span class="text-gray-500 mr-2">[${timestamp}]</span>${typeIcon}<span class="${typeColor}">${message}</span>`;
-      logWindow.appendChild(logLine);
-      logWindow.scrollTop = logWindow.scrollHeight;
-    }
-    
-    // 替换console.log
-    const originalLog = console.log;
-    console.log = function (...args) {
-      originalLog(...args);
-      log(args.join(" "));
-    };
-    
-    // 清空日志
-    clearLogBtn.addEventListener('click', () => {
-      logWindow.innerHTML = '<div class="text-gray-400 log-entry">日志已清空</div>';
-    });
+    // --- 全局变量 ---
+    let device, ctrlPoint, adc1Value, longValue, connected = false;
+    let sequenceTasks = [];
 
-    // 核心功能代码
-    var connected = false;
-    var device = null;
-    var longValue = null;
-    var deviceTimeInterval = null; // 设备时间更新定时器
-    var deviceTimeBase = null;     // 设备时间基准值
-    
-    // 格式化时间显示
-    function formatTime(year, month, mday, hour, min, sec) {
-      month += 1;
-      return `${year}-${month.toString().padStart(2, '0')}-${mday.toString().padStart(2, '0')} ${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-    }
-    
-    // 更新设备时间显示
-    function updateDeviceTime() {
-      if (!deviceTimeBase) return;
-      
-      // 获取基准时间
-      let { year, month, mday, hour, minute, second } = deviceTimeBase;
-      
-      // 计算从基准时间开始经过的秒数
-      const now = new Date();
-      const elapsedSeconds = Math.floor((now - deviceTimeBase.timestamp) / 1000);
-      
-      // 更新时间
-      let totalSeconds = second + elapsedSeconds;
-      second = totalSeconds % 60;
-      let totalMinutes = minute + Math.floor(totalSeconds / 60);
-      minute = totalMinutes % 60;
-      let totalHours = hour + Math.floor(totalMinutes / 60);
-      hour = totalHours % 24;
-      // 此处忽略天数变化，因为设备时间通常不会长时间运行
-      
-      // 更新显示
-      document.getElementById('current_time').textContent = formatTime(year, month, mday, hour, minute, second);
-    }
 
-    function onClick() {
-      if(connected) disconnect();
-      else connectToDevice();
-    }
-
-    // 连接设备
-    async function connectToDevice() {
+    // --- 1. 核心蓝牙连接 (贴合原代码值) ---
+    async function onClick() {
+      if (connected) { device.gatt.disconnect(); return; }
       try {
-        // 更新按钮状态
-        const connectButton = document.getElementById('connect-button');
-        connectButton.disabled = true;
-        connectButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 连接中...';
-        
-        console.log('请求设备...');
         device = await navigator.bluetooth.requestDevice({
           filters: [{ namePrefix: "DLG-CLOCK" }],
-          optionalServices: [ 0xff00 ]
+          optionalServices: [0xff00]
         });
-        console.log('设备名称:', device.name);
-        document.getElementById('device_name').textContent = device.name;
-        device.ongattserverdisconnected = onDisconnect;
+        device.addEventListener('gattserverdisconnected', onDisconnect);
 
         let server = await device.gatt.connect();
-        console.log('设备已连接');
-
         let service = await server.getPrimaryService(0xff00);
-        let ctrlPoint = await service.getCharacteristic(0xff03);
-        let adc1Value = await service.getCharacteristic(0xff02);
+
+        // 特征值映射
+        ctrlPoint = await service.getCharacteristic(0xff03);
+        adc1Value = await service.getCharacteristic(0xff02);
         longValue = await service.getCharacteristic(0xff01);
 
-        let cur_voltage = await adc1Value.readValue();
-        console.log('当前电压:', cur_voltage.getUint16(0, true) / 1000 + 'V');
-        document.getElementById('current_voltage').textContent = (cur_voltage.getUint16(0, true) / 1000).toFixed(2) + ' V';
-
-        let cur_time = await longValue.readValue();
-        let year = cur_time.getUint16(0, true),
-            month = cur_time.getUint8(2),
-            mday = cur_time.getUint8(3),
-            hour = cur_time.getUint8(4),
-            minute = cur_time.getUint8(5),
-            second = cur_time.getUint8(6);
-        
-        // 保存设备时间基准值和当前时间戳
-        deviceTimeBase = {
-          year, month, mday, hour, minute, second,
-          timestamp: new Date()
-        };
-        
-        // 立即更新设备时间显示
-        updateDeviceTime();
-        
-        // 设置定时器每秒更新一次设备时间
-        if (deviceTimeInterval) clearInterval(deviceTimeInterval);
-        deviceTimeInterval = setInterval(updateDeviceTime, 1000);
-
-        let now = new Date();
-        document.getElementById('system_time').textContent = formatTime(
-          now.getFullYear(), now.getMonth(), now.getDate(),
-          now.getHours(), now.getMinutes(), now.getSeconds()
-        );
+        // 读取电压
+        let val = await adc1Value.readValue();
+        let voltage = val.getUint16(0, true) / 1000;
+        document.getElementById('current_voltage').textContent = voltage.toFixed(2) + 'V';
 
         connected = true;
-        document.getElementById('setime-button').disabled = false;
-        document.getElementById('upfirm-button').disabled = false;
-        document.getElementById('send90-button').disabled = false;
-        document.getElementById('calibration-button').disabled = false;
-        document.getElementById('setime-button').classList.remove('opacity-50', 'cursor-not-allowed');
-        document.getElementById('upfirm-button').classList.remove('opacity-50', 'cursor-not-allowed');
-        document.getElementById('send90-button').classList.remove('opacity-50', 'cursor-not-allowed');
-        document.getElementById('calibration-button').classList.remove('opacity-50', 'cursor-not-allowed');
-        
-        connectButton.innerHTML = '<i class="fa fa-disconnect"></i> 断开连接';
-        connectButton.disabled = false;
-      } catch (error) {
-        console.log('连接失败:', error);
-        disconnect();
-      }
+        document.getElementById('device_name').textContent = device.name;
+        document.getElementById('connect-button').innerHTML = '<i class="fa fa-chain-broken"></i> 断开连接';
+        document.getElementById('connect-button').classList.replace('bg-blue-600', 'bg-red-500');
+        updateBtnState(true);
+        log("设备已连接", "success");
+      } catch (e) { log("连接失败: " + e, "error"); }
     }
 
+    function onDisconnect() {
+      connected = false;
+      document.getElementById('device_name').textContent = "未连接";
+      document.getElementById('connect-button').innerHTML = '<i class="fa fa-bluetooth"></i> 连接设备';
+      document.getElementById('connect-button').classList.replace('bg-red-500', 'bg-blue-600');
+      updateBtnState(false);
+      log("连接已断开", "warning");
+    }
+
+    function updateBtnState(s) {
+      ['setime-button', 'upfirm-button', 'send90-button', 'calibration-button'].forEach(id => document.getElementById(id).disabled = !s);
+    }
+
+    // --- 2. 图像处理与抖动算法 (预览核心) ---
+
+    function processTo1BPP(img, w, h, method) {
+      const canvas = document.getElementById('calc-canvas');
+      const ctx = canvas.getContext('2d');
+      const alignW = Math.ceil(w / 8) * 8; // 8位对齐
+      canvas.width = alignW; canvas.height = h;
+      ctx.fillStyle = "white"; ctx.fillRect(0, 0, alignW, h);
+      ctx.drawImage(img, 0, 0, alignW, h);
+
+      const imgData = ctx.getImageData(0, 0, alignW, h);
+      const data = imgData.data;
+      const grey = new Float32Array(alignW * h);
+      // 转灰度
+      for (let i = 0; i < data.length; i += 4) grey[i / 4] = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+
+      const output = new Uint8Array(alignW * h);
+      // 算法逻辑
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < alignW; x++) {
+          let i = y * alignW + x;
+          let oldP = grey[i];
+          let newP = oldP > 127 ? 255 : 0;
+          if (method === 'threshold') newP = oldP > 127 ? 255 : 0;
+          output[i] = newP;
+          let err = oldP - newP;
+          if (method === 'floyd') {
+            if (x + 1 < alignW) grey[i + 1] += err * 7 / 16;
+            if (y + 1 < h) {
+              if (x > 0) grey[i + alignW - 1] += err * 3 / 16;
+              grey[i + alignW] += err * 5 / 16;
+              if (x + 1 < alignW) grey[i + alignW + 1] += err * 1 / 16;
+            }
+          } else if (method === 'atkinson') {
+            let e = err >> 3;
+            if (x + 1 < alignW) grey[i + 1] += e; if (x + 2 < alignW) grey[i + 2] += e;
+            if (y + 1 < h) {
+              if (x > 0) grey[i + alignW - 1] += e; grey[i + alignW] += e; if (x + 1 < alignW) grey[i + alignW + 1] += e;
+              if (y + 2 < h) grey[i + 2 * alignW] += e;
+            }
+          }
+        }
+      }
+
+      // 生成位图 (1bpp)
+      const bitmap = new Uint8Array((alignW * h) / 8);
+      for (let i = 0; i < output.length; i++) {
+        if (output[i] === 0) bitmap[Math.floor(i / 8)] |= (1 << (7 - (i % 8)));
+      }
+
+      // 生成预览图
+      for (let i = 0; i < output.length; i++) {
+        const v = output[i]; const idx = i * 4;
+        data[idx] = data[idx + 1] = data[idx + 2] = v; data[idx + 3] = 255;
+      }
+      ctx.putImageData(imgData, 0, 0);
+      return { bitmap, preview: canvas.toDataURL() };
+    }
+
+    // --- 3. 原始绘图底层函数 (完全贴合你的 snippet) ---
+    async function startDrawing() { await longValue.writeValue(new Uint8Array([0x93])); }
+    async function endDrawing() { await longValue.writeValue(new Uint8Array([0x95])); }
+
+    async function drawLine(x1, y1, x2, y2, color) {
+      let buf = new Uint8Array([0x94, 0x0b, x1, y1, x2, y2, color]);
+      await longValue.writeValue(buf);
+    }
+    async function drawRect(x1, y1, x2, y2, color) {
+      let buf = new Uint8Array([0x94, 0x0c, x1, y1, x2, y2, color]);
+      await longValue.writeValue(buf);
+    }
+    async function drawBox(x1, y1, x2, y2, color) {
+      let buf = new Uint8Array([0x94, 0x0d, x1, y1, x2, y2, color]);
+      await longValue.writeValue(buf);
+    }
+    async function drawTriangle(x1, y1, x2, y2, x3, y3, color) {
+      let buf = new Uint8Array([0x94, 0x1a, x1, y1, x2, y2, x3, y3, color]);
+      await longValue.writeValue(buf);
+    }
+    async function drawText(x, y, scale, color, isFilled, text) {
+      // --- 1. 预处理转义字符 ---
+      // 将用户输入的字符串字面量 "\\n" 替换为真实的字节 0x0A
+      // 将用户输入的字符串字面量 "\\t" 替换为真实的字节 0x09
+      let processedText = text
+        .replace(/\\n/g, '\n')
+        .replace(/\\t/g, '\t');
+
+      // --- 2. 编码为字节流 ---
+      const encoder = new TextEncoder();
+      let textBytes = encoder.encode(processedText);
+
+      // 限制长度，防止超出蓝牙 MTU (保持你要求的 56 字节限制)
+      if (textBytes.length > 155) {
+        console.warn("文本过长，已截断");
+        textBytes = textBytes.slice(0, 155);
+      }
+
+      // --- 3. 构造缓冲区 ---
+      // 格式: 0x94, 0x0e, x, y, scale, color, isFilled, [text...], \0
+      let buf = new Uint8Array(2 + 5 + textBytes.length + 1);
+      buf[0] = 0x94;
+      buf[1] = 0x0e;     // 子命令: DrawText
+      buf[2] = x;
+      buf[3] = y;
+      buf[4] = scale;
+      buf[5] = color;
+      buf[6] = isFilled ? 1 : 0;
+
+      // 填充字符串内容
+      buf.set(textBytes, 7);
+
+      // 确保以 \0 结尾，这样你的 C 语言端可以用 %s 或遍历识别结束
+      buf[buf.length - 1] = 0;
+
+      // --- 4. 发送 ---
+      try {
+        await longValue.writeValue(buf);
+        // 这里用我们之前改好的智能 log
+        console.log(`发送指令 0x0e: "${processedText}"`);
+      } catch (e) {
+        console.error(`文本发送失败:`, e);
+      }
+    }
+    async function sendTileChunk(startX, startY, tx, ty, mapx, mapy, bitmap) {
+      let buf = new Uint8Array(8 + bitmap.length);
+      buf.set([0x94, 0x0f, startX, startY, tx, ty, mapx, mapy]);
+      buf.set(bitmap, 8);
+      await longValue.writeValue(buf);
+      console.log("发送了：", startX, startY, tx, ty, mapx, mapy);
+    }
+
+
+    // 你修改后的底层函数
+
+    // --- 4. 任务管理与顺序执行 ---
+    window.updateVal = (idx, key, val) => {
+      const t = sequenceTasks[idx];
+      t.data[key] = (key === 'txt' || key === 'm') ? val : parseInt(val);
+      // 如果是图片且修改了关键参数，立即重绘预览
+      if (t.cmd === '0x0f' && ['w', 'h', 'm'].includes(key)) {
+        const res = processTo1BPP(t.rawImg, t.data.w, t.data.h, t.data.m);
+        t.bitmap = res.bitmap; t.preview = res.preview;
+        updatePreviewPane(res.preview, t.data.w, t.data.h);
+      }
+    };
+
+    function updatePreviewPane(url, w, h) {
+      const img = document.getElementById('live-preview-img');
+      img.src = url; img.classList.remove('hidden');
+      document.getElementById('preview-placeholder').classList.add('hidden');
+      const meta = document.getElementById('img-info');
+      document.getElementById('img-meta').innerText = `转换分辨率: ${w}x${h}px`;
+      document.getElementById('img-meta').classList.remove('hidden');
+    }
+
+    document.getElementById('add-task-btn').onclick = () => {
+      const cmd = document.getElementById('cmd-selector').value;
+      if (cmd === '0x0f') {
+        const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*';
+        input.onchange = async (e) => {
+          const file = e.target.files[0]; if (!file) return;
+          const img = new Image(); img.src = URL.createObjectURL(file);
+          await new Promise(r => img.onload = r);
+          const res = processTo1BPP(img, 250, 122, 'floyd');
+          sequenceTasks.push({ cmd: '0x0f', data: { x: 0, y: 0, w: 250, h: 122, m: 'floyd' }, rawImg: img, bitmap: res.bitmap, preview: res.preview });
+          updatePreviewPane(res.preview, 250, 122); renderTasks();
+        };
+        input.click();
+      } else {
+        const defaults = {
+          '0x0b': { x1: 0, y1: 0, x2: 50, y2: 50, c: 0 }, '0x0c': { x1: 0, y1: 0, x2: 50, y2: 50, c: 0 },
+          '0x0d': { x1: 0, y1: 0, x2: 50, y2: 50, c: 0 }, '0x0e': { x: 0, y: 0, s: 1, c: 0, f: 0, txt: 'Hello' },
+          '0xfe': { x: 0, y: 0, s: 1, txt: '中文Hello'/*虚拟指令*/ }, '0xff': { txt: ""/*虚拟指令*/ },
+          '0x1a': { x1: 0, y1: 0, x2: 50, y2: 50, x3: 100, y3: 100, c: 0, f: 0 }
+        };
+        sequenceTasks.push({ cmd, data: defaults[cmd] }); renderTasks();
+      }
+    };
+
+    function renderTasks() {
+      const container = document.getElementById('task-container');
+      container.innerHTML = sequenceTasks.map((t, i) => `
+    <div class="card-style py-3 flex flex-col gap-2 group hover:border-blue-300">
+      <div class="flex items-center gap-4">
+        <div class="text-[10px] font-bold text-slate-300 w-4">${i + 1}</div>
+        <div class="flex-grow">
+          <div class="text-[10px] font-black text-blue-600 uppercase mb-1">${t.cmd} 指令</div>
+          <div class="flex flex-wrap gap-2 text-xs">
+            ${Object.keys(t.data).map(k => `
+              <div class="flex items-center">
+                <span class="bg-slate-50 border border-slate-200 border-r-0 px-2 py-1 rounded-l text-slate-400">${k.toUpperCase()}</span>
+                ${k === 'm' ? `
+                  <select onchange="updateVal(${i},'${k}',this.value)" class="border border-slate-200 px-1 py-1 rounded-r outline-none">
+                    <option value="floyd" ${t.data[k] === 'floyd' ? 'selected' : ''}>Floyd</option>
+                    <option value="atkinson" ${t.data[k] === 'atkinson' ? 'selected' : ''}>Atkinson</option>
+                    <option value="threshold" ${t.data[k] === 'threshold' ? 'selected' : ''}>阈值</option>
+                  </select>
+                ` : `
+                  <input type="${k === 'txt' ? 'text' : 'number'}" value="${t.data[k]}" onchange="updateVal(${i},'${k}',this.value)" class="border border-slate-200 px-2 py-1 ${k === 'txt' ? 'w-32' : 'w-14'} rounded-r outline-none">
+                `}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <button onclick="delTask(${i})" class="text-slate-300 hover:text-red-500"><i class="fa fa-trash"></i></button>
+      </div>
+
+      ${t.cmd === '0x0f' ? `
+        <div class="flex items-center gap-3 ml-8 p-2 bg-slate-50 rounded-lg border border-slate-100">
+          <div class="w-10 h-10 bg-white border rounded flex items-center justify-center overflow-hidden">
+            ${t.preview ? `<img src="${t.preview}" class="max-w-full max-h-full">` : `<i class="fa fa-image text-slate-200"></i>`}
+          </div>
+          <div class="flex flex-col gap-1">
+            <span class="text-[10px] ${t.preview ? 'text-green-500' : 'text-orange-500 font-bold'}">
+              ${t.preview ? '● 素材已就绪' : '⚠ 配置已导入，请重新选择图片素材'}
+            </span>
+            <button onclick="reuploadImg(${i})" class="text-[10px] bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 w-fit">
+              <i class="fa fa-upload"></i> ${t.preview ? '更换图片' : '立即关联图片'}
+            </button>
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+    }
+
+    // --- 5. 顺序执行逻辑 (使用 Switch 分选) ---
+    document.getElementById('run-sequence-btn').onclick = async () => {
+      if (!connected) return alert("请先连接蓝牙");
+      log("开始顺序执行协议流程...");
+      try {
+        await startDrawing(); // 0x93
+
+        for (const t of sequenceTasks) {
+          const d = t.data;
+          switch (t.cmd) {
+            case '0x0b': await drawLine(d.x1, d.y1, d.x2, d.y2, d.c); break;
+            case '0x0c': await drawRect(d.x1, d.y1, d.x2, d.y2, d.c); break;
+            case '0x0d': await drawBox(d.x1, d.y1, d.x2, d.y2, d.c); break;
+            case '0x0e': await drawText(d.x, d.y, d.s, d.c, d.f, d.txt); break;
+            case '0x1a': await drawTriangle(d.x1, d.y1, d.x2, d.y2, d.x3, d.y3, d.c, d.f); break;
+            case '0x0f':
+              log(`分块传输: ${d.w}x${d.h}`);
+              const bytesPerRow = Math.ceil(d.w / 8);
+
+              // 将步长改为 32
+              for (let y = 0; y < d.h; y += 32) {
+                for (let x = 0; x < d.w; x += 32) {
+                  const currentTileH = Math.min(32, d.h - y);
+                  const currentTileW = Math.min(32, d.w - x);
+
+                  // 动态计算行字节数：如果是 32 像素，这里就是 4 字节
+                  const tileBytesPerRow = Math.ceil(currentTileW / 8);
+                  // 创建并确保 Buffer 初始化为 0
+                  const tileData = new Uint8Array(tileBytesPerRow * currentTileH);
+
+                  for (let line = 0; line < currentTileH; line++) {
+                    for (let px = 0; px < currentTileW; px++) {
+                      const targetX = x + px;
+                      const py = y + line;
+
+                      // 原图提取 (保持你原版正常的 MSB 逻辑)
+                      const srcByteIdx = py * bytesPerRow + Math.floor(targetX / 8);
+                      const srcBitShift = 7 - (targetX % 8);
+
+                      if (t.bitmap[srcByteIdx] & (1 << srcBitShift)) {
+                        // 写入目标块
+                        const destByteIdx = (line * tileBytesPerRow) + Math.floor(px / 8);
+                        const destBitShift = 7 - (px % 8);
+                        tileData[destByteIdx] |= (1 << destBitShift);
+                      }
+                    }
+                  }
+
+                  // 发送函数，tx, ty 传 0，直接使用计算好的绝对坐标
+                  await sendTileChunk(d.x + x, d.y + y, 0, 0, currentTileW, currentTileH, tileData);
+
+                  // 因为单包数据量大，建议稍微留出处理时间
+                  await new Promise(r => setTimeout(r, 30));
+                }
+              }
+              break;
+            case '0xfe':
+              log(`渲染位图文字: ${d.txt}`);
+              // d.x, d.y 是用户在流水线积木里设置的起始坐标
+              await sendTextAsBitmaps(d.x, d.y, d.s, d.txt);
+              break;
+
+            case '0xff': await sendRawHex(d.txt); break;
+          }
+          log(`已发送: ${t.cmd}`);
+          await new Promise(r => setTimeout(r, 100));
+        }
+
+        await endDrawing(); // 0x95 & 0x96
+        log("执行完毕", "success");
+      } catch (e) { log("执行失败: " + e, "error"); }
+    };
     // 对时功能
     async function onSetTime() {
       const setimeButton = document.getElementById('setime-button');
       setimeButton.disabled = true;
       setimeButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 同步中...';
-      
+
       try {
         // 等待整秒时间
-        while(true){
+        while (true) {
           const tm_ms = Date.now();
-          if((tm_ms%1000)==0)
+          if ((tm_ms % 1000) == 0)
             break;
-		}
+        }
 
         let now = new Date();
         let year = now.getFullYear(),
-            month = now.getMonth(),
-            mday = now.getDate(),
-            wday = now.getDay(),
-            hour = now.getHours(),
-            minute = now.getMinutes(),
-            second = now.getSeconds();
+          month = now.getMonth(),
+          mday = now.getDate(),
+          wday = now.getDay(),
+          hour = now.getHours(),
+          minute = now.getMinutes(),
+          second = now.getSeconds();
 
-        let locale_str = now.toLocaleDateString('zh-CN-u-ca-chinese',{month:'numeric',day:'numeric'});
+        let locale_str = now.toLocaleDateString('zh-CN-u-ca-chinese', { month: 'numeric', day: 'numeric' });
         let l_month = locale_str.startsWith('闰') ? 128 : 0;
         if (l_month) locale_str = locale_str.slice(1);
         let [l_month_num, l_day] = locale_str.split('-').map(Number);
         l_month += l_month_num;
-        let l_year = parseInt(now.toLocaleDateString('zh-CN-u-ca-chinese',{year:'numeric'}));
+        let l_year = parseInt(now.toLocaleDateString('zh-CN-u-ca-chinese', { year: 'numeric' }));
         console.log('农历年:', l_year, '月:', l_month, '日:', l_day);
 
         let buf = new Uint8Array(12);
         buf.set([0x91, year % 256, Math.floor(year / 256), month, mday, hour, minute, second, wday, l_year - 2020, l_month - 1, l_day]);
         await longValue.writeValue(buf);
 
-        // 更新设备时间基准值
-        deviceTimeBase = {
-          year, month: month, mday, hour, minute, second,
-          timestamp: new Date()
-        };
-        
-        // 立即更新设备时间显示
-        updateDeviceTime();
-        
+
+
         console.log('同步时间成功!');
       } catch (error) {
         console.log('同步时间失败:', error);
@@ -452,13 +566,13 @@
       }
       return -1;
     }
-    
+
     // 发送命令
     async function onSend90() {
       const send90Button = document.getElementById('send90-button');
       send90Button.disabled = true;
       send90Button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 发送中...';
-      
+
       try {
         let buf = new Uint8Array([0x90]);  // 构造单字节命令
         await longValue.writeValue(buf);
@@ -470,15 +584,15 @@
         send90Button.disabled = false;
       }
     }
-    
+
     // 固件升级
     async function onUpdate() {
       const upfirmButton = document.getElementById('upfirm-button');
       upfirmButton.disabled = true;
       upfirmButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 升级中...';
-      
+
       document.getElementById('progress-container').classList.remove('hidden');
-      
+
       let firm_buf, firm_size;
 
       try {
@@ -522,7 +636,7 @@
       const totalSize = firm_size + 64;
       const progressBar = document.getElementById('update_progress_bar');
       const progressText = document.getElementById('update_progress_text');
-      
+
       try {
         for (let i = 0; i < totalSize; i += 256) {
           buf.fill(0xff);
@@ -567,111 +681,424 @@
       }
     }
 
-	async function onCalibration() {
-		document.getElementById('calibration-button').disabled = true;
+    async function onCalibration() {
+      document.getElementById('calibration-button').disabled = true;
 
-		var minute, second, last_minute, cal_minute;
+      var minute, second, last_minute, cal_minute;
 
-		cur_time = await longValue.readValue();
-		last_minute = cur_time.getUint8(5);
-		cal_minute = cur_time.getInt32(7, true);
-		console.log('对时后'+cal_minute+'分钟');
+      cur_time = await longValue.readValue();
+      last_minute = cur_time.getUint8(5);
+      cal_minute = cur_time.getInt32(7, true);
+      console.log('对时后' + cal_minute + '分钟');
 
-        console.log('等待分钟跳变......');
-        while(true) {
-          cur_time = await longValue.readValue();
-          minute = cur_time.getUint8(5);
-            if(minute != last_minute)
-              break;
-                last_minute = minute;
+      console.log('等待分钟跳变......');
+      while (true) {
+        cur_time = await longValue.readValue();
+        minute = cur_time.getUint8(5);
+        if (minute != last_minute)
+          break;
+        last_minute = minute;
+      }
+      second = cur_time.getUint8(6);
+
+      var today = new Date();
+      var sys_minute = today.getMinutes();
+      var sys_second = today.getSeconds();
+      console.log('设备时间: ' + minute + '分' + second + '秒');
+      console.log('系统时间: ' + sys_minute + '分' + sys_second + '秒');
+
+      if (cal_minute == -1) {
+        console.log('请先对时!');
+      } else if (cal_minute < 2880) {
+        console.log('对时与校准间隔太短(小于两天)!');
+      } else {
+
+        if (minute > sys_minute) {
+          if (minute - sys_minute > 50)
+            sys_minute += 60;
+        } else {
+          if (sys_minute - minute > 50)
+            minute += 60;
         }
-        second = cur_time.getUint8(6);
 
-        var today = new Date();
-        var sys_minute = today.getMinutes();
-        var sys_second = today.getSeconds();
-        console.log('设备时间: '+minute+'分'+second+'秒');
-        console.log('系统时间: '+sys_minute+'分'+sys_second+'秒');
+        var diff = (minute * 60 + second) - (sys_minute * 60 + sys_second);
+        console.log('时间差: ' + diff + '秒');
 
-		if(cal_minute==-1){
-			console.log('请先对时!');
-		}else if(cal_minute<2880){
-			console.log('对时与校准间隔太短(小于两天)!');
-		}else{
+        var buf = new Uint8Array(4);
+        buf[0] = 0x92;
+        buf[1] = diff % 256;
+        buf[2] = diff / 256;
+        buf[3] = 0x00;
+        await longValue.writeValue(buf);
 
-			if(minute>sys_minute){
-				if(minute-sys_minute>50)
-					sys_minute += 60;
-			}else{
-				if(sys_minute-minute>50)
-					minute += 60;
-			}
-
-			var diff = (minute*60+second)-(sys_minute*60+sys_second);
-			console.log('时间差: '+diff+'秒');
-
-			var buf = new Uint8Array(4);
-			buf[0] = 0x92;
-			buf[1] = diff%256;
-			buf[2] = diff/256;
-			buf[3] = 0x00;
-			await longValue.writeValue(buf);
-
-			console.log('校准完成');
-		}
-		document.getElementById('calibration-button').disabled = false;
-	}
-
-    // 断开连接
-    function disconnect() {
-      const connectButton = document.getElementById('connect-button');
-      connectButton.disabled = true;
-      connectButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 断开中...';
-      
-      document.getElementById('setime-button').disabled = true;
-      document.getElementById('send90-button').disabled = true;
-      document.getElementById('upfirm-button').disabled = true;
-      document.getElementById('calibration-button').disabled = true; 
-      document.getElementById('setime-button').classList.add('opacity-50', 'cursor-not-allowed');
-      document.getElementById('upfirm-button').classList.add('opacity-50', 'cursor-not-allowed');
-      document.getElementById('send90-button').classList.add('opacity-50', 'cursor-not-allowed');
-      document.getElementById('calibration-button').classList.add('opacity-50', 'cursor-not-allowed');
-
-      // 清除设备时间更新定时器
-      if (deviceTimeInterval) {
-        clearInterval(deviceTimeInterval);
-        deviceTimeInterval = null;
+        console.log('校准完成');
       }
-      deviceTimeBase = null;
-
-      if (device && device.gatt.connected) {
-        device.gatt.disconnect();
-      }
-      onDisconnect();
+      document.getElementById('calibration-button').disabled = false;
     }
 
-    // 断开回调
-    function onDisconnect() {
-      device = null;
-      connected = false;
-      
-      document.getElementById('device_name').textContent = "未连接";
-      document.getElementById('current_voltage').textContent = "--.- V";
-      document.getElementById('current_time').textContent = "--:--:--";
+    async function sendTextAsBitmaps(startX, startY, scale, text) {
+      const canvas = document.getElementById('calc-canvas');
+      const ctx = canvas.getContext('2d');
 
-      const connectButton = document.getElementById('connect-button');
-      connectButton.innerHTML = '<i class="fa fa-bluetooth"></i> 连接设备';
-      connectButton.disabled = false;
-      
-      console.log('设备已断开连接');
+      // 1. 测量与缩放画布
+      let baseWidth = 0;
+      for (const char of text) {
+        baseWidth += char.charCodeAt(0) > 255 ? 16 : 8;
+      }
+
+      const scaledW = Math.ceil(baseWidth * scale);
+      const scaledH = Math.ceil(16 * scale);
+
+      canvas.width = scaledW;
+      canvas.height = scaledH;
+
+      // 2. 渲染文字
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "black";
+      ctx.font = `${16 * scale}px 'SimSun', monospace`;
+      ctx.textBaseline = "top";
+      ctx.fillText(text, 0, 0);
+
+      // 3. 按 tx, ty 索引分块发送
+      // mapx = 8, mapy = 16
+      for (let ty = 0; ty * 16 < scaledH; ty++) {
+        for (let tx = 0; tx * 8 < scaledW; tx++) {
+
+          const x = tx * 8;
+          const y = ty * 16;
+
+          const imgData = ctx.getImageData(x, y, 8, 16).data;
+          const bitmap = new Uint8Array(16);
+          let hasPixel = false;
+
+          for (let i = 0; i < 8 * 16; i++) {
+            if (imgData[i * 4] < 128) {
+              const byteIdx = Math.floor(i / 8);
+              const bitIdx = 7 - (i % 8);
+              bitmap[byteIdx] |= (1 << bitIdx);
+              hasPixel = true;
+            }
+          }
+
+          if (hasPixel) {
+            // 核心逻辑：startX/Y 不变，通过 tx/ty 索引告知单片机位置
+            // C端逻辑：fx = startX + (tx * 8), fy = startY + (ty * 16)
+            await sendTileChunk(startX, startY, tx, ty, 8, 16, bitmap);
+
+            // 增加一点延时保证 BLE 栈稳定性
+            await new Promise(r => setTimeout(r, 30));
+          }
+        }
+      }
+    }
+    // 通用的十六进制发送函数
+    async function sendRawHex(hexString) {
+      if (!connected) {
+        log("发送失败: 蓝牙未连接", "error");
+        return;
+      }
+
+      try {
+        // 1. 清洗数据：移除空格，按空格分割
+        const hexArray = hexString.trim().split(/\s+/);
+        // 2. 转换为数字数组
+        const bytes = hexArray.map(h => parseInt(h, 16)).filter(n => !isNaN(n));
+
+        if (bytes.length === 0) return;
+
+        // 3. 构造缓冲区并发送
+        const buf = new Uint8Array(bytes);
+        await longValue.writeValue(buf);
+
+        // 记录日志 (使用之前改进的日志变色逻辑)
+        console.log(`[RAW SEND]: ${hexArray.join(' ').toUpperCase()}`);
+      } catch (e) {
+        console.error(`原始指令发送异常:`, e);
+      }
     }
 
-    // 事件绑定
-    document.getElementById('connect-button').addEventListener('click', onClick);
+    // 绑定手动输入发送
+    document.getElementById('send-raw-btn').onclick = async () => {
+      const input = document.getElementById('raw-hex-input');
+      const lines = input.value.trim().split('\n');
+
+      if (!connected) return log("蓝牙未连接", "error");
+
+      log(`开始执行: 共 ${lines.length} 行`, "warning");
+
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim().toLowerCase();
+        if (!line || line.startsWith('//')) continue;
+
+        // --- 1. 处理等待指令 ---
+        if (line.startsWith('w')) {
+          const ms = parseInt(line.substring(1));
+          if (!isNaN(ms)) {
+            console.log(`[Wait] 暂停 ${ms}ms`);
+            await new Promise(r => setTimeout(r, ms));
+            continue;
+          }
+        }
+
+        // --- 2. 处理十六进制行 (关键修复点) ---
+        // 将这一行中所有的 16 进制数提取出来
+        const hexParts = line.split(/\s+/);
+        const byteValues = hexParts
+          .map(h => parseInt(h, 16))
+          .filter(n => !isNaN(n));
+
+        if (byteValues.length > 0) {
+          try {
+            // 【修复：将整行字节打包进同一个 Buffer】
+            const buf = new Uint8Array(byteValues);
+
+            await longValue.writeValue(buf);
+
+            // 打印出的日志应该显示整行，而不是单个字节
+            console.log(`[Line ${i + 1}] 发送整包: ${line.toUpperCase()}`);
+
+            // 给硬件留一点处理时间
+            await new Promise(r => setTimeout(r, 40));
+          } catch (e) {
+            console.error(`第 ${i + 1} 行发送失败:`, e);
+            break;
+          }
+        }
+      }
+      log("所有指令执行完毕", "success");
+    };
+
+    // 快捷发送预设指令
+    function sendQuickHex(hex) {
+      sendRawHex(hex);
+    }
+    // 导出配置
+    document.getElementById('export-btn').onclick = () => {
+      if (sequenceTasks.length === 0) return alert("当前序列为空");
+
+      // 过滤掉无法序列化的对象，只保留参数
+      const exportData = sequenceTasks.map(t => ({
+        cmd: t.cmd,
+        data: t.data
+      }));
+
+      const jsonStr = JSON.stringify(exportData);
+      const base64Str = btoa(unescape(encodeURIComponent(jsonStr))); // 支持中文的Base64
+
+      navigator.clipboard.writeText(base64Str).then(() => {
+        alert("序列配置已复制到剪贴板！\n你可以将其保存为文本文件。");
+        log("配置已导出并复制");
+      });
+    };
+
+    // 导入配置
+    document.getElementById('import-btn').onclick = () => {
+      const code = prompt("请粘贴导出的配置字符串 (Base64):");
+      if (!code) return;
+
+      try {
+        const jsonStr = decodeURIComponent(escape(atob(code)));
+        const importData = JSON.parse(jsonStr);
+
+        // 清空现有序列或询问是否合并
+        if (confirm("是否清空当前序列并导入？")) {
+          sequenceTasks = [];
+        }
+
+        importData.forEach(item => {
+          // 基础数据还原
+          const newTask = {
+            cmd: item.cmd,
+            data: item.data
+          };
+
+          // 如果是图片，因为原始图片文件没法存在文本里，我们需要特殊处理
+          if (item.cmd === '0x0f') {
+            newTask.preview = ""; // 初始预览为空
+            // 提示：图片需要手动重新关联
+            log(`导入图片积木: 请点击积木中的"重新上传"以关联素材`, "warning");
+          }
+
+          sequenceTasks.push(newTask);
+        });
+
+        renderTasks();
+        log("配置导入成功", "success");
+      } catch (e) {
+        alert("导入失败：字符串格式不正确");
+        console.error(e);
+      }
+    };
+
+    // 专门处理导入后的图片重新上传
+    window.reuploadImg = (idx) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        await new Promise(r => img.onload = r);
+
+        const t = sequenceTasks[idx];
+        t.rawImg = img;
+        // 使用你现有的 processTo1BPP 函数生成位图和预览
+        const res = processTo1BPP(img, t.data.w, t.data.h, t.data.m);
+        t.bitmap = res.bitmap;
+        t.preview = res.preview;
+
+        renderTasks(); // 刷新列表显示小图
+        updatePreviewPane(res.preview, t.data.w, t.data.h); // 刷新大预览窗格
+        log("图片素材关联成功");
+      };
+      input.click();
+    };
+    // --- 系统辅助 ---
+    function log(m) {
+      log(m, "default");
+    }
+    function log(m, type = "default") {
+      const win = document.getElementById('log-window');
+      const div = document.createElement('div');
+
+      // 使用完整的类名映射表，避免动态拼接导致 Tailwind 识别失败
+      const colors = {
+        'success': 'text-emerald-400 font-bold', // 成功用更亮的祖母绿
+        'error': 'text-pink-500', // 错误用粉红且带闪烁
+        'warning': 'text-amber-400',             // 警告用琥珀色
+        'default': 'text-indigo-300/80'          // 默认用淡淡的靛蓝色
+      };
+
+      // 获取对应的颜色类，如果没有匹配到则使用默认色
+      div.className = colors[type] || colors['default'];
+
+      div.innerHTML = `> ${m}`;
+      win.appendChild(div);
+      win.scrollTop = win.scrollHeight;
+    }
+    // 替换console.log
+    const originalLog = console.log;
+    console.log = function (...args) {
+      originalLog(...args);
+      log(args.join(" "));
+    };
+
+
+    window.delTask = (i) => { sequenceTasks.splice(i, 1); renderTasks(); };
+    document.getElementById('connect-button').onclick = onClick;
+    document.getElementById('clear-btn').onclick = () => { sequenceTasks = []; renderTasks(); };
+
+
+
     document.getElementById('setime-button').addEventListener('click', onSetTime);
     document.getElementById('upfirm-button').addEventListener('click', onUpdate);
     document.getElementById('send90-button').addEventListener('click', onSend90);
     document.getElementById('calibration-button').addEventListener('click', onCalibration);
   </script>
 </body>
+<div class="mt-8 card-style bg-slate-50 border-slate-300">
+  <h2 class="text-sm font-bold text-slate-600 mb-4 flex items-center gap-2">
+    <i class="fa fa-book"></i> DLG-CLOCK 通讯协议手册 (v1.0)
+  </h2>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-[11px] leading-relaxed">
+      <thead class="bg-slate-200 text-slate-600">
+        <tr>
+          <th class="p-2 border">指令集</th>
+          <th class="p-2 border">功能描述</th>
+          <th class="p-2 border">数据负载 (Payload)</th>
+          <th class="p-2 border">备注</th>
+        </tr>
+      </thead>
+      <tbody class="text-slate-600 font-mono">
+        <tr>
+          <td class="p-2 border font-bold text-blue-600">0x90</td>
+          <td class="p-2 border">12/24小时切换</td>
+          <td class="p-2 border">无</td>
+          <td class="p-2 border">自动反转当前状态并刷新</td>
+        </tr>
+        <tr class="bg-white">
+          <td class="p-2 border font-bold text-blue-600">0x91</td>
+          <td class="p-2 border">RTC 时间设置</td>
+          <td class="p-2 border">[0x91, Y, M, D, H, M, S]</td>
+          <td class="p-2 border">设置后立即触发 clock_draw</td>
+        </tr>
+        <tr>
+          <td class="p-2 border font-bold text-blue-600">0x92</td>
+          <td class="p-2 border">时间校准 (Fixup)</td>
+          <td class="p-2 border">[0x92, Low, High]</td>
+          <td class="p-2 border">16位有符号整数 (秒)</td>
+        </tr>
+        <tr class="bg-blue-50/50">
+          <td class="p-2 border font-bold text-indigo-600">0x93</td>
+          <td class="p-2 border">启动绘图传输</td>
+          <td class="p-2 border">无</td>
+          <td class="p-2 border">标记绘图中并清空画布缓存</td>
+        </tr>
+        <tr class="bg-blue-50/50">
+          <td class="p-2 border font-bold text-indigo-600">0x94</td>
+          <td class="p-2 border">图形绘制子命令</td>
+          <td class="p-2 border">[0x94, 子指令, 参数...]</td>
+          <td class="p-2 border">支持画线、矩形、文字、位图</td>
+        </tr>
+        <tr class="bg-blue-50/50">
+          <td class="p-2 border font-bold text-indigo-600">0x95</td>
+          <td class="p-2 border">结束传输并全刷</td>
+          <td class="p-2 border">无</td>
+          <td class="p-2 border">触发屏幕最终物理更新</td>
+        </tr>
+        <tr>
+          <td class="p-2 border font-bold text-blue-600">0x96</td>
+          <td class="p-2 border">截断模式切换</td>
+          <td class="p-2 border">无</td>
+          <td class="p-2 border">切换 Fixed 显示模式</td>
+        </tr>
+        <tr class="bg-green-50/50">
+          <td class="p-2 border font-bold text-green-700">0x97</td>
+          <td class="p-2 border">快速局部刷新</td>
+          <td class="p-2 border">无</td>
+          <td class="p-2 border">FlyDraw模式，完成后保持传输态</td>
+        </tr>
+        <tr>
+          <td class="p-2 border font-bold text-blue-600">0x98</td>
+          <td class="p-2 border">追加传输启动</td>
+          <td class="p-2 border">无</td>
+          <td class="p-2 border">标记传输中，但不清除现有画布</td>
+        </tr>
+        <tr class="bg-orange-50/50">
+          <td class="p-2 border font-bold text-orange-700">0xA0+</td>
+          <td class="p-2 border">OTA 固件升级</td>
+          <td class="p-2 border">[0xA0, 数据...]</td>
+          <td class="p-2 border">处理固件分包数据</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-[10px]">
+    <div class="p-3 bg-white border border-slate-200 rounded-lg">
+      <h3 class="font-bold text-indigo-600 mb-2 underline">0x94 绘图子指令详细 (Sub-CMD)</h3>
+      <ul class="space-y-1 font-mono">
+        <li><b class="text-slate-800">0x0b (画线):</b> 94 0b x1 y1 x2 y2 color</li>
+        <li><b class="text-slate-800">0x0c (空框):</b> 94 0c x1 y1 x2 y2 color</li>
+        <li><b class="text-slate-800">0x0d (实框):</b> 94 0d x1 y1 x2 y2 color</li>
+        <li><b class="text-slate-800">0x0e (文字):</b> 94 0e x y sz col fill str... \0</li>
+        <li><b class="text-slate-800">0x0f (位图):</b> 94 0f sx sy tx ty mx my[32Bytes]</li>
+      </ul>
+    </div>
+    <div class="p-3 bg-white border border-slate-200 rounded-lg text-slate-500">
+      <h3 class="font-bold text-slate-600 mb-2 underline">调试建议</h3>
+      <p>1. 绘制前务必先发送 <span class="text-blue-600">93</span> (启动)。</p>
+      <p>2. 绘制结束后发送 <span class="text-blue-600">95</span> (全刷) 或 <span class="text-green-600">97</span> (快刷)。</p>
+      <p>3. 文字指令末尾必须手动补 <span class="text-orange-600">00</span> 结束符。</p>
+      <p>4. 变量支持: C端会自动识别字符串中的 <span class="text-indigo-600">$[v]</span> 进行替换。</p>
+    </div>
+  </div>
+</div>
+
 </html>

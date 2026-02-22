@@ -183,6 +183,12 @@ void user_app_init(void)
 
 	selflash(otp_boot); // 根据OTP启动数据执行自闪存操作
 
+	//
+	//
+	//*****
+	//注意！这里因为个人屏幕特性固定了分辨率
+	//*****
+	//
 	// 初始化EPD屏幕（2.13黑白屏，6个测试点）
 	epd_hw_init(0x23200700, 0x05210006, 122, 250, detect_mode | ROTATE_3);
 	if (epd_detect() == 0)

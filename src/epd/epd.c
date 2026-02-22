@@ -14,8 +14,8 @@ int scr_padding;
 int update_mode;
 int lut_size;
 
-int detect_w = 104;
-int detect_h = 212;
+int detect_w = 122;
+int detect_h = 250;
 int detect_mode = EPD_BW;
 
 
