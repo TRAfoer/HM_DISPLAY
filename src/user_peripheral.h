@@ -88,7 +88,7 @@
 extern char *bt_id;
 extern int ota_state;
 
-
+extern const int boot_debug;
 /*
  * FUNCTION DECLARATIONS
  ****************************************************************************************

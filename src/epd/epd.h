@@ -21,6 +21,7 @@ int gpio_get(int index);
 #define ERASE_32K  0x52
 int fspi_config(u32 gpio_word);
 int fspi_init(void);
+int fspi_exit(void);
 int sf_readid(void);
 int sf_sector_erase(int cmd, int addr, int wait);
 int sf_page_write(int addr, u8 *buf, int size);
@@ -65,10 +66,17 @@ extern u8 lut_p[];
 void draw_pixel(int x, int y, int color);
 void draw_hline(int y, int x1, int x2, int color);
 void draw_vline(int x, int y1, int y2, int color);
+void draw_line(int x1, int y1, int x2, int y2, int color);
 void draw_rect(int x1, int y1, int x2, int y2, int color);
 void draw_box(int x1, int y1, int x2, int y2, int color);
-void draw_char(int x, int y, int ch, int color);
+void draw_bitmap(int start_x, int start_y, int width, int height, const unsigned char *img);
+void draw_triangle(int x1, int y1, int x2, int y2, int x3, int y3, int color);
+void draw_filled_triangle(int x1, int y1, int x2, int y2, int x3, int y3, int color);
+
+
 void draw_text(int x, int y, char *str, int color);
+void draw_text_filled(int x, int y, char *str, int color);
+void fb_set_scale(int scale);
 int select_font(int id);
 int fb_draw_font_info(int x, int y, const u8 *font_data, int color);
 int fb_draw_font(int x, int y, int ucs, int color);
@@ -80,6 +88,7 @@ void draw_qr_code(
     int pix_size,
     const unsigned char img[31][4]
 );
+
 
 void select_layout(int xres, int yres);
 
@@ -97,6 +106,16 @@ void select_layout(int xres, int yres);
 #define BLACK     0
 #define WHITE     1
 #define RED       2
+#define SWAP      3
+
+enum
+{
+	QR_MODE =0,
+	CLOCK_MODE= 1,
+	CALENDAR_MODE=2,
+	CUSTOM_CLOCK_MODE =3,
+	LB_MODE=4
+};
 
 
 #define UPDATE_FULL  0
@@ -104,6 +123,10 @@ void select_layout(int xres, int yres);
 #define UPDATE_FLY   2
 
 #define DRAW_BT   0x80
+
+extern int Default_Update_Mode;
+extern int Update_Mode;
+extern char adv_name[20];
 
 extern int scr_w;
 extern int scr_h;
@@ -126,5 +149,13 @@ extern int fb_h;
 
 extern u8 fb_bw[];
 extern u8 fb_rr[];
+//epd math
+typedef struct {
+    int x;
+    int y;
+} Point;
 
+int get_sin(int angle);
+int get_cos(int angle);
 
+Point get_rotate_point(int cx, int cy, int px, int py, int angle);

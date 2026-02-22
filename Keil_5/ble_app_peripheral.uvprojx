@@ -1253,11 +1253,6 @@
               <FileType>5</FileType>
               <FilePath>..\src\config\da14585_config_advanced.h</FilePath>
             </File>
-            <File>
-              <FileName>da14585_config_basic.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\src\config\da14585_config_basic.h</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -1417,6 +1412,11 @@
           </GroupOption>
           <Files>
             <File>
+              <FileName>da14585_config_basic.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\src\config\da14585_config_basic.h</FilePath>
+            </File>
+            <File>
               <FileName>da14535_config_advanced.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\src\config\da14535_config_advanced.h</FilePath>
@@ -1536,6 +1536,11 @@
               <FileType>1</FileType>
               <FilePath>..\src\epd\spi_flash.c</FilePath>
             </File>
+            <File>
+              <FileName>epd_math.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\epd\epd_math.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
@@ -1544,7 +1549,7 @@
       <TargetName>DA14586</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>6180000::V6.18::ARMCLANG</pCCUsed>
+      <pCCUsed>6220000::V6.22::ARMCLANG</pCCUsed>
       <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
@@ -2787,11 +2792,6 @@
               <FileType>5</FileType>
               <FilePath>..\src\config\da14585_config_advanced.h</FilePath>
             </File>
-            <File>
-              <FileName>da14585_config_basic.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\src\config\da14585_config_basic.h</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -2951,6 +2951,11 @@
           </GroupOption>
           <Files>
             <File>
+              <FileName>da14585_config_basic.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\src\config\da14585_config_basic.h</FilePath>
+            </File>
+            <File>
               <FileName>da14535_config_advanced.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\src\config\da14535_config_advanced.h</FilePath>
@@ -3070,6 +3075,11 @@
               <FileType>1</FileType>
               <FilePath>..\src\epd\spi_flash.c</FilePath>
             </File>
+            <File>
+              <FileName>epd_math.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\epd\epd_math.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
@@ -3078,7 +3088,7 @@
       <TargetName>DA14531</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>6180000::V6.18::ARMCLANG</pCCUsed>
+      <pCCUsed>6220000::V6.22::ARMCLANG</pCCUsed>
       <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
@@ -4339,11 +4349,6 @@
               <FileType>5</FileType>
               <FilePath>..\src\config\da14585_config_advanced.h</FilePath>
             </File>
-            <File>
-              <FileName>da14585_config_basic.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\src\config\da14585_config_basic.h</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -4433,6 +4438,11 @@
             </GroupArmAds>
           </GroupOption>
           <Files>
+            <File>
+              <FileName>da14585_config_basic.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\src\config\da14585_config_basic.h</FilePath>
+            </File>
             <File>
               <FileName>da14535_config_advanced.h</FileName>
               <FileType>5</FileType>
@@ -4553,6 +4563,11 @@
               <FileType>1</FileType>
               <FilePath>..\src\epd\spi_flash.c</FilePath>
             </File>
+            <File>
+              <FileName>epd_math.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\epd\epd_math.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
@@ -4561,7 +4576,7 @@
       <TargetName>DA14531_01</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>6180000::V6.18::ARMCLANG</pCCUsed>
+      <pCCUsed>6220000::V6.22::ARMCLANG</pCCUsed>
       <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
@@ -5822,11 +5837,6 @@
               <FileType>5</FileType>
               <FilePath>..\src\config\da14585_config_advanced.h</FilePath>
             </File>
-            <File>
-              <FileName>da14585_config_basic.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\src\config\da14585_config_basic.h</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -5916,6 +5926,11 @@
             </GroupArmAds>
           </GroupOption>
           <Files>
+            <File>
+              <FileName>da14585_config_basic.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\src\config\da14585_config_basic.h</FilePath>
+            </File>
             <File>
               <FileName>da14535_config_advanced.h</FileName>
               <FileType>5</FileType>
@@ -6036,6 +6051,11 @@
               <FileType>1</FileType>
               <FilePath>..\src\epd\spi_flash.c</FilePath>
             </File>
+            <File>
+              <FileName>epd_math.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\epd\epd_math.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
@@ -6044,7 +6064,7 @@
       <TargetName>DA14535</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>6180000::V6.18::ARMCLANG</pCCUsed>
+      <pCCUsed>6220000::V6.22::ARMCLANG</pCCUsed>
       <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
@@ -7305,11 +7325,6 @@
               <FileType>5</FileType>
               <FilePath>..\src\config\da14585_config_advanced.h</FilePath>
             </File>
-            <File>
-              <FileName>da14585_config_basic.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\src\config\da14585_config_basic.h</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -7399,6 +7414,11 @@
         <Group>
           <GroupName>da14535_config</GroupName>
           <Files>
+            <File>
+              <FileName>da14585_config_basic.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\src\config\da14585_config_basic.h</FilePath>
+            </File>
             <File>
               <FileName>da14535_config_advanced.h</FileName>
               <FileType>5</FileType>
@@ -7518,6 +7538,11 @@
               <FileName>spi_flash.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\src\epd\spi_flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>epd_math.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\epd\epd_math.c</FilePath>
             </File>
           </Files>
         </Group>
