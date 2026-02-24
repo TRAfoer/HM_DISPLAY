@@ -3,7 +3,7 @@
 基于HMCLOCK衍生的多种玩法
 
 ---
-![IMG_20260222_115004](vx_images/55198526457357.jpg =500x)
+![IMG_20260222_115004](vx_images/55198526457357.jpg)
 
 ## 碎碎念
 这是个人用于探索单片机的第一个尝试，所以项目内新增代码的AI率极高，且稳定性不行（日历仅支持一个分辨率，相比原仓库更容易出现花屏等）
@@ -62,15 +62,22 @@
 
 
 首次上电会打开配对页面，打开网页就可以配对
+>网页是万能的Gemini做的
 
-![1](vx_images/120635350991683.png =550x)
+![1](vx_images/120635350991683.png)
 
 网页端有**指令流水线**，按提示输入就能够按照顺序绘画
 目前还不完善
 
-
 ---
 
+## 实验性：灰度显示
+
+---![IMG_20260224_153704](vx_images/414807329732179.jpg =260x)
+
+在几日的调整过后：我成功在这块单色屏幕上驱动了灰度显示
+如果要自己试试，请打开weble下的啥啥啥gui.py文件 ，放入图片更名为input.jpg，把输出的命令放入自定义指令窗口即可看着墨水屏显示灰度图像
+我的灰度显示模式与他人不同，因为我观察到我的劣质屏幕在多次刷新后会屏幕白色部分整体泛黑，所以是从最浅到最深进行的显示，每一层覆盖在上一层上面并且将上一层推淡来达成灰度的效果，第一层被推了15次所以淡，最后一次自然是最浓的
 ## 外壳装配
 
 外壳文件存储在3D目录文件下，采用推拉盖结构，推荐使用树脂打印。
@@ -127,7 +134,7 @@
 * 原生固件无法被蓝牙扫描到，因此难以通过 OTA 更新；
 * 价签多数电池电量不足，因此建议拆机替换供电。
 * 该项目部分使用了**八丁饰尾体 16**[yzdnn/BaDingShiWeiTi-16: 基于KHドット八丁堀16衍生的中文像素字体 / A Chinese pixel font derived from KH Dot Hatcyoubori 16.](https://github.com/yzdnn/BaDingShiWeiTi-16)。如有侵权请告知，我会立刻删除
-* 我正计划使用**袖珍像素体**[yzdnn/XiuZhenXiangSuTi: 基于k6x8衍生的中文像素字体 / A Chinese pixel font derived from k6x8.](https://github.com/yzdnn/XiuZhenXiangSuTi)进行字库移植，适配全GBK字库
+* ~~已废弃~~我正计划使用**袖珍像素体**[yzdnn/XiuZhenXiangSuTi: 基于k6x8衍生的中文像素字体 / A Chinese pixel font derived from k6x8.](https://github.com/yzdnn/XiuZhenXiangSuTi)进行字库移植，适配全GBK字库
 
 ---
 
