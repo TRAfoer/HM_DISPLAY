@@ -14,8 +14,8 @@ int scr_padding;
 int update_mode;
 int lut_size;
 
-int detect_w = 122;
-int detect_h = 250;
+int detect_w = 104;
+int detect_h = 212;
 int detect_mode = EPD_BW;
 
 
@@ -72,7 +72,28 @@ u8 lut_fly_70[80] = {
     0x15, 0x41, 0xa8, 0x32, 0x0a, 0x2e,
 };
 
+// 定义一个极短的微脉冲波形 (等权重)
+// 只在 W->B (白到黑) 阶段施加极短电压，B->B 等其他阶段保持为 0
+static u8 lut_gray_step[76] = {
+//  RP0   RP1   RP2   RP3   RP4   RP5   RP6
+    0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // LUT0  B->B
+    0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // LUT1  B->W
+    0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // LUT2  W->B
+    0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // LUT3  W->W
 
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // LUT4
+
+    0x01, 0x00, 0x00, 0x00, 0x01,  // Group0
+    0x00, 0x00, 0x00, 0x00, 0x01,  // Group1
+    0x01, 0x02, 0x02, 0x00, 0x01,  // Group2
+    0x00, 0x00, 0x00, 0x00, 0x01,  // Group3
+    0x00, 0x00, 0x00, 0x00, 0x01,  // Group4
+    0x00, 0x00, 0x00, 0x00, 0x01,  // Group5
+    0x00, 0x00, 0x00, 0x00, 0x01,  // Group6
+
+//	VGH   VSH1  VSH2  VSL   FR1   FR2
+    0x15, 0x41, 0xa8, 0x0a, 0x0a, 0x2e,
+};
 u8 lut_fast_100[112] = {
 //  RP0   RP1   RP2   RP3   RP4   RP5   RP6   RP7   RP8   RP9
     0x80, 0x60, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // LUT0
@@ -222,7 +243,6 @@ void epd_load_lut(u8 *lut)
 	}
 }
 
-
 void epd_dump_lut(void)
 {
 	u8 lut[256];
@@ -318,6 +338,7 @@ void epd_init(void)
 }
 
 
+
 void epd_update_mode(int mode)
 {
 	update_mode = mode;
@@ -333,15 +354,22 @@ void epd_update(void)
 	}else{
 		if(update_mode==UPDATE_FAST){
 			epd_load_lut(lut_fast);
-		}else{
+		}else if (update_mode==UPDATE_FAST){
 			epd_load_lut(lut_fly);
+		}else if(update_mode==UPDATE_GRAY){
+			//epd_gray_update(gray_step);
+			//Goto end;
+			epd_load_lut(lut_gray_step);
+			epd_cmd1(0x2c,0x0d); // VCOM
 		}
 		seq = 0xc7;
 	}
 
 	epd_cmd1(0x22, seq);
 	epd_cmd(0x20);
+	end:return;
 }
+
 
 
 void epd_sleep(void)
@@ -355,7 +383,7 @@ void epd_sleep(void)
 void epd_screen_update(void)
 {
 	int i;
-
+	
 	epd_cmd(0x24);  // write RAM for black(0)/white(1)
 	for(i=0; i<win_h*line_bytes; i++){
 		epd_data(fb_bw[i]);

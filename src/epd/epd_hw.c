@@ -88,6 +88,7 @@ void epd_hw_init(u32 config0, u32 config1, int w, int h, int mode)
 	scr_padding = line_bytes*8-scr_w;
 
 	select_layout(h, w);
+	
 }
 
 void epd_hw_open(void)

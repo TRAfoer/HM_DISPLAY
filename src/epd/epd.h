@@ -54,12 +54,16 @@ void epd_update_mode(int mode);
 void epd_update();
 void epd_sleep(void);
 void epd_window(int x1, int y1, int x2, int y2);
+void epd_set_gray_image(const u8 *image);
+void epd_load_lut(u8 *lut);
 void epd_screen_update(void);
 void epd_screen_clean(int mode);
 int  epd_detect(void);
 
 
 extern u8 lut_p[];
+// epd_gray相关
+void gray_mode_refresh(void);
 
 
 // epd_gui
@@ -92,6 +96,7 @@ void draw_qr_code(
 
 void select_layout(int xres, int yres);
 
+void refresh_screen(int UPDATE_MODE);//广义上的刷新屏幕，只要调用这个就能集成掉用其他方法
 
 #define EPD_BW    0x00
 #define EPD_BWR   0x20
@@ -121,6 +126,7 @@ enum
 #define UPDATE_FULL  0
 #define UPDATE_FAST  1
 #define UPDATE_FLY   2
+#define UPDATE_GRAY  3
 
 #define DRAW_BT   0x80
 

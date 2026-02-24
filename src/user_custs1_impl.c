@@ -944,7 +944,7 @@ static void epd_wait_timer(void)
 	if (epd_busy())
 	{
 		// 屏幕仍在忙，40ms后再次检查
-		epd_wait_hnd = app_easy_timer(4, epd_wait_timer);
+		epd_wait_hnd = app_easy_timer(40, epd_wait_timer);
 	}
 	else
 	{
@@ -1244,6 +1244,8 @@ void per_min_draw(int flags)
 
 
 
+
+
 /****************************************************************************************/
 
 /**
@@ -1380,7 +1382,7 @@ void custom_draws_prase(uint8_t drawBuffer[64]){
 		}break;
 		case 0x0f:  // 接收图片数据块
 		{
-				//memcpy(&bitmapBuffer[0], &drawBuffer[5],32);
+			//0是指令代表，1，2为位置，3，4为索引，5，6为图块边长7之后为图块数据（最大32x32），
 				draw_bitmap(drawBuffer[1]+(drawBuffer[3]*drawBuffer[5]),drawBuffer[2]+(drawBuffer[4]*drawBuffer[6]),drawBuffer[5],drawBuffer[6],&drawBuffer[7]);
 			}		
 		break;
@@ -1419,7 +1421,7 @@ void setFB(){
 	memset(fb_rr, 0x00, scr_h * line_bytes);
 	
 }
-//其实应该叫“刷新屏幕的”
+//“刷新屏幕的”
 void refresh_screen(int UPDATE_MODE){
 	
 // 墨水屏更新显示
@@ -1501,6 +1503,7 @@ void user_svc1_long_val_wr_ind_handler(ke_msg_id_t const msgid,
 			if(fixed){//画个锁头
 			draw_box(5,layouts[current_layout].yres-5,25,layouts[current_layout].yres,BLACK);
 			draw_rect(10,layouts[current_layout].yres-7,20,layouts[current_layout].yres-5,BLACK);
+			refresh_screen(UPDATE_FLY);
 			}
 	}
 	else if (param->value[0] == 0x97)//快速刷新,可以接着传
@@ -1528,6 +1531,13 @@ void user_svc1_long_val_wr_ind_handler(ke_msg_id_t const msgid,
 		Update_Mode=Default_Update_Mode;
 		per_min_draw_default();
 		
+	}
+	else if(param->value[0] == 0x9a){//灰度传输尝试
+		// 在 epd_load_lut 或刷新逻辑中
+		gray_mode_refresh();
+	}
+	else if(param->value[0] == 0x9f){
+			
 	}
 	else if (param->value[0] >= 0xa0)
 	{

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>EPD 8阶灰度发送器 (250x122)</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            background: #121212;
+            color: #e0e0e0;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 550px;
+            margin: auto;
+            background: #1e1e1e;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .canvas-box {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        canvas {
+            background: white;
+            border: 1px solid #444;
+            width: 100%;
+            height: auto;
+            image-rendering: pixelated;
+            border-radius: 4px;
+        }
+
+        .label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3d5afe;
+            color: white;
+        }
+
+        .btn-success {
+            background: #00c853;
+            color: white;
+        }
+
+        button:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        #log {
+            font-family: 'Fira Code', monospace;
+            font-size: 11px;
+            background: #000;
+            color: #00e676;
+            padding: 15px;
+            height: 150px;
+            overflow-y: auto;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+
+        input[type="file"] {
+            background: #2a2a2a;
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #888;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h3 style="margin-top:0; text-align:center;">8阶灰度叠加控制器</h3>
+
+        <div class="controls">
+            <button class="btn-primary" onclick="connectBle()">连接蓝牙</button>
+            <button class="btn-success" id="sendBtn" onclick="runGrayCycle()" disabled>开始发送</button>
+        </div>
+
+        <input type="file" id="fileInput" accept="image/*">
+
+        <div class="canvas-box">
+            <span class="label">实时层级预览 (250 x 122)</span>
+            <canvas id="viewCanvas" width="250" height="122"></canvas>
+        </div>
+
+        <div id="log">等待连接...</div>
+    </div>
+
+    <script>
+        let bleDevice, charTX;
+        const W = 250, H = 122;
+        const canvas = document.getElementById('viewCanvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+        // 1. 蓝牙连接 (使用你指定的 0xFF00 / 0xFF01)
+        async function connectBle() {
+            try {
+                log("正在搜索 DLG 设备...");
+                bleDevice = await navigator.bluetooth.requestDevice({
+                    filters: [{ namePrefix: 'DLG' }],
+                    optionalServices: [0xff00]
+                });
+                const server = await bleDevice.gatt.connect();
+                const service = await server.getPrimaryService(0xff00);
+                charTX = await service.getCharacteristic(0xff01);
+                log("蓝牙就绪: " + bleDevice.name);
+                document.getElementById('sendBtn').disabled = false;
+            } catch (e) { log("连接失败: " + e); }
+        }
+
+        async function send(data) {
+            if (!charTX) return;
+            await charTX.writeValue(new Uint8Array(data));
+            await new Promise(r => setTimeout(r, 25)); // 确保单片机处理稳定
+        }
+
+        // 2. 图片处理
+        document.getElementById('fileInput').onchange = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                ctx.fillStyle = "white";
+                ctx.fillRect(0, 0, W, H);
+                const scale = Math.min(W / img.width, H / img.height);
+                const ox = (W - img.width * scale) / 2;
+                const oy = (H - img.height * scale) / 2;
+                ctx.drawImage(img, ox, oy, img.width * scale, img.height * scale);
+                log("图片已加载");
+            };
+            img.src = URL.createObjectURL(e.target.files[0]);
+        };
+
+        // 3. 核心 7 步叠加逻辑
+        async function runGrayCycle() {
+            if (!charTX) return;
+
+            log(">>> 初始化基准 [9F 00]");
+            await send([0x9F, 0x00]);
+            await new Promise(r => setTimeout(r, 1500)); // 给全屏刷白留时间
+
+            const imgData = ctx.getImageData(0, 0, W, H).data;
+
+            for (let step = 1; step <= 7; step++) {
+                const threshold = (8 - step) * 32;
+                log(`发送第 ${step}/7 层 (阈值: ${threshold})`);
+
+                // 更新画布显示当前正在发送的“黑点”层
+                updatePreview(imgData, threshold);
+
+                // 分块发送 32x32
+                for (let y = 0; y < H; y += 32) {
+                    for (let x = 0; x < W; x += 32) {
+                        const bw = Math.min(32, W - x);
+                        const bh = Math.min(32, H - y);
+                        const bitmap = extractBitBlock(imgData, x, y, bw, bh, threshold);
+
+                        // 构建 0x94 0x0F 指令
+                        // 格式: [0x94, 0x0F, x, y, indexX(0), indexY(0), w, h, data...]
+                        let header = [0x94, 0x0F, x, y, 0, 0, bw, bh];
+                        await send([...header, ...bitmap]);
+                        //log("发送了：", x, y);
+                    }
+                }
+
+                log(`>>> 步进叠加脉冲 [9F 01]`);
+                await send([0x9F, 0x01]);
+                await new Promise(r => setTimeout(r, 500));
+            }
+
+            log(">>> 全部完成 [9F 02]");
+            await send([0x9F, 0x02]);
+        }
+
+        // 辅助：从原始像素提取 1-bit 数据块
+        function extractBitBlock(data, startX, startY, w, h, t) {
+            let bytes = [];
+            let curr = 0, count = 0;
+            for (let y = startY; y < startY + h; y++) {
+                for (let x = startX; x < startX + w; x++) {
+                    const i = (y * W + x) * 4;
+                    const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+
+                    if (gray < t) curr &= ~(0x80 >> count); // 黑
+                    else curr |= (0x80 >> count);          // 白
+
+                    if (++count === 8) { bytes.push(curr); curr = 0xff; count = 0; }
+                }
+                if (count > 0) { bytes.push(curr); curr = 0xff; count = 0; }
+            }
+            return bytes;
+        }
+
+        function updatePreview(data, t) {
+            const out = ctx.createImageData(W, H);
+            for (let i = 0; i < data.length; i += 4) {
+                const g = data[i] * 0.3 + data[i + 1] * 0.59 + data[i + 2] * 0.11;
+                const v = g < t ? 0 : 255;
+                out.data[i] = out.data[i + 1] = out.data[i + 2] = v;
+                out.data[i + 3] = 255;
+            }
+            ctx.putImageData(out, 0, 0);
+        }
+
+        function log(m) {
+            const l = document.getElementById('log');
+            l.innerHTML += "> " + m + "<br>";
+            l.scrollTop = l.scrollHeight;
+        }
+    </script>
+</body>
+
+</html>

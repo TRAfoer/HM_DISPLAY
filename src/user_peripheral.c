@@ -190,10 +190,10 @@ void user_app_init(void)
 	//*****
 	//
 	// 初始化EPD屏幕（2.13黑白屏，6个测试点）
-	epd_hw_init(0x23200700, 0x05210006, 122, 250, detect_mode | ROTATE_3);
+	epd_hw_init(0x23200700, 0x05210006, 122, 250, EPD_BW | ROTATE_3);
 	if (epd_detect() == 0)
 	{ // 如果检测不到屏幕，尝试另一种配置（5个测试点）
-		epd_hw_init(0x23111000, 0x07210120, 122, 250, detect_mode | ROTATE_3);
+		epd_hw_init(0x23111000, 0x07210120, 122, 250, EPD_BW | ROTATE_3);
 		epd_detect();
 	}
 
