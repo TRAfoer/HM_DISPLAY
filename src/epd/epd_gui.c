@@ -8,7 +8,7 @@
 int fb_w;
 int fb_h;
 
-#define FB_SIZE 4736
+#define FB_SIZE 3813
 u8 fb_bw[FB_SIZE];
 u8 fb_rr[FB_SIZE];
 

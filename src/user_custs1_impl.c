@@ -76,10 +76,8 @@ extern int adv_state;
 
 //是否传输自定义绘画数据
 static uint8_t isTransing=0;
-//是否固定画面
-static uint8_t	fixed=0;
 //是否在每分钟重绘中执行重绘请求
-static uint8_t redraw_dirty_mark=0;
+uint8_t redraw_dirty_mark=0;
 /*
  * FUNCTION DEFINITIONS
  ****************************************************************************************
@@ -433,7 +431,71 @@ static int get_month_day(int mon)
 
 	return d2m[month];
 }
+/**
+ * @brief 判断是否为闰年
+ * @param year 年份
+ * @return 1 表示闰年，0 表示平年
+ */
+static int is_leap_year(int year)
+{
+    return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+}
 
+/**
+ * @brief 获取某个月的天数
+ */
+static int days_in_month(int year, int month)
+{
+    const uint8_t days[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    int d = days[month];
+    if (month == 1 && is_leap_year(year))
+        d = 29;
+    return d;
+}
+
+/**
+ * @brief 将公历日期转换为从 2020-01-01 起的绝对天数
+ * @note 基准日 2020-01-01 为第 0 天
+ */
+static int date_to_abs_days(int year, int month, int day)
+{
+    int days = 0;
+    int y;
+
+    // 累加自 2020 年起的完整年份天数
+    // 如果输入年份小于 2020，结果会是负数
+    if (year >= 2020) {
+        for (y = 2020; y < year; y++) {
+            days += is_leap_year(y) ? 366 : 365;
+        }
+    } else {
+        for (y = year; y < 2020; y++) {
+            days -= is_leap_year(y) ? 366 : 365;
+        }
+    }
+
+    // 累加当年已过月份的天数
+    for (int m = 0; m < month; m++) {
+        days += days_in_month(year, m);
+    }
+
+    // 加上当月日期 (day 是 0-based)
+    days += day;
+
+    return days;
+}
+
+/**
+ * @brief 计算天数差
+ */
+int days_until(int target_year, int target_month, int target_day)
+{
+    // 使用全局变量 year, month, date 作为起点
+    int current_days = date_to_abs_days(year, month, date);
+    int target_days  = date_to_abs_days(target_year, target_month, target_day);
+    
+    return target_days - current_days;
+}
 // 增加1天
 void date_inc(void)
 {
@@ -837,7 +899,7 @@ static void draw_bt(int x, int y)
 {
 	fb_draw_font_info(x, y, font_bt, BLACK);
 	if(boot_debug){
-		draw_text(x-16,y-15,"DBing",BLACK);
+		//draw_text(x-16,y-15,"DBing",BLACK);
 }
 }
 
@@ -961,6 +1023,32 @@ static void epd_wait_timer(void)
 	}
 }
 // 适用于快速刷新的阻塞式等待（带超时保护）
+//辅助函数：清空画布
+void setFB(){
+	
+	memset(fb_bw, 0xff, scr_h * line_bytes);
+	memset(fb_rr, 0x00, scr_h * line_bytes);
+	
+}
+//“刷新屏幕的”
+void gray_mode_refresh(){//使用和黑白一样的fb
+		epd_cmd(0x24); 
+		for(int i=0; i<(scr_w * scr_h / 8); i++) epd_data(0xFF); // 填充全白数据清空缓存
+		refresh_screen(UPDATE_GRAY);
+}
+void refresh_screen(int UPDATE_MODE){
+	
+// 墨水屏更新显示
+	epd_hw_open();
+	epd_update_mode(UPDATE_MODE);
+	arch_set_sleep_mode(ARCH_SLEEP_OFF);
+	epd_init();
+	epd_screen_update();
+	epd_update();
+	// 更新时如果深度休眠，会花屏。 这里暂时关闭休眠。
+	epd_wait_hnd = app_easy_timer(40, epd_wait_timer);
+	
+}
 
 void QR_draw()
 {
@@ -987,7 +1075,7 @@ void QR_draw()
 
 void LB_draw()
 {
-	if(fixed) return;
+	
 	epd_update_mode(UPDATE_FULL);
 
 	memset(fb_bw, 0xff, scr_h * line_bytes);
@@ -1086,21 +1174,32 @@ void draw_clock(int flags){
 
 	// 墨水屏更新显示
 }
-int last_hour=0;
+
+void custom_clock_draw(int flag){//drawclock同款flag
+			
+			redraw_dirty_mark=1;
+			
+			draw_text_filled(5,5,"CUSTOM CLOCK MODE : \n   I AM DEVELOPING!",WHITE);
+			
+}
+
+
+
+
+int last_hour=2000;
+int last_day=2000;
+static u8 calbuf[3813];
 /**
  * 绘制日历界面（使用了第四个字体而且仅支持250*122）
  */
-void calendar_draw() {
-    if(last_hour!=hour){
-			last_hour=hour;
-			epd_update_mode(UPDATE_FAST);
-		}else{
-			epd_update_mode(UPDATE_FLY);
-		}
-    LAYOUT *lt = &layouts[current_layout];
-    int maxX = lt->xres;
+void calendar_draw(int flags) {
+	  LAYOUT *lt = &layouts[current_layout];
+		if(last_day!=date){
+		last_day=date;
+		epd_update_mode(UPDATE_FAST);
+		int maxX = lt->xres;
     int maxY = lt->yres;
-    
+    setFB();
     char buf[32];
     
     // Set the appropriate font
@@ -1180,9 +1279,19 @@ void calendar_draw() {
             draw_text(x + text_offset_x, y, buf, BLACK);
         }
     }
-		char str[20];
+		memcpy(calbuf,fb_bw,3813);
+		}
+   
+    memcpy(fb_bw,calbuf,3813);
+		if ((flags & DRAW_BT)||boot_debug)//debug在头文件
+		{
+			// 显示蓝牙图标
+			draw_bt(lt->xres-8, lt->yres-15);
+		}
+		char str[36];
 		select_font(lt->font_char);
-		sprintf(str,"| %02d:%02d | %dmv |",hour,minute,get_batt_volt());
+		
+		sprintf(str,"| %02d:%02d | %dmv | %dD->end",hour,minute,get_batt_volt(),days_until(2026,5,6));// 5 代表 6 月，6 代表 7 号
 		draw_text(5,lt->yres-16,str,BLACK);
 		//draw_filled_triangle(0,0,120,0,120,112,SWAP);
 		
@@ -1198,7 +1307,7 @@ void per_min_draw_default(){
 */
 void per_min_draw(int flags)
 {
-	if (ota_state||isTransing||fixed)
+	if (ota_state||isTransing)
 	{
 		return;
 	}
@@ -1215,16 +1324,10 @@ void per_min_draw(int flags)
 			draw_clock(flags);
 		}break;
 		case CUSTOM_CLOCK_MODE:{
-			redraw_dirty_mark=1;
-			//Update_Mode=CLOCK_MODE;
-			select_font(4);
-			draw_text_filled(5,5,"CUSTOM CLOCK MODE : \n   I AM DEVELOPING!",WHITE);
-			select_font(layouts[current_layout].font_char);
-			
-			//draw_clock(flags);
+			custom_clock_draw(flags);
 		}break;
 		case CALENDAR_MODE:{
-			calendar_draw();
+			calendar_draw(flags);
 		}break;
 		case LB_MODE:{
 			LB_draw();
@@ -1414,27 +1517,6 @@ if (param == NULL||isTransing==0) {
 		uint8_t v1=value[0];
 		*/
 }
-//辅助函数：清空画布
-void setFB(){
-	
-	memset(fb_bw, 0xff, scr_h * line_bytes);
-	memset(fb_rr, 0x00, scr_h * line_bytes);
-	
-}
-//“刷新屏幕的”
-void refresh_screen(int UPDATE_MODE){
-	
-// 墨水屏更新显示
-	epd_hw_open();
-	epd_update_mode(UPDATE_MODE);
-	arch_set_sleep_mode(ARCH_SLEEP_OFF);
-	epd_init();
-	epd_screen_update();
-	epd_update();
-	// 更新时如果深度休眠，会花屏。 这里暂时关闭休眠。
-	epd_wait_hnd = app_easy_timer(40, epd_wait_timer);
-	
-}
 
 /**
  * 长值特征写入指示处理函数
@@ -1461,7 +1543,7 @@ void user_svc1_long_val_wr_ind_handler(ke_msg_id_t const msgid,
 		// 设置时钟
 		clock_set((uint8_t *)param->value);
 		// 更新显示（带蓝牙图标，快速更新模式）
-		Update_Mode=CLOCK_MODE;
+		Update_Mode=Default_Update_Mode;
 		per_min_draw(DRAW_BT | UPDATE_FAST);
 		// 打印当前时间信息
 		clock_print();
@@ -1499,12 +1581,7 @@ void user_svc1_long_val_wr_ind_handler(ke_msg_id_t const msgid,
 	}
 	else if (param->value[0] == 0x96)//截断显示模式（固定显示这个画面）
 	{
-			fixed=fixed==0?1:0;
-			if(fixed){//画个锁头
-			draw_box(5,layouts[current_layout].yres-5,25,layouts[current_layout].yres,BLACK);
-			draw_rect(10,layouts[current_layout].yres-7,20,layouts[current_layout].yres-5,BLACK);
-			refresh_screen(UPDATE_FLY);
-			}
+		
 	}
 	else if (param->value[0] == 0x97)//快速刷新,可以接着传
 	{
@@ -1532,7 +1609,7 @@ void user_svc1_long_val_wr_ind_handler(ke_msg_id_t const msgid,
 		per_min_draw_default();
 		
 	}
-	else if(param->value[0] == 0x9a){//灰度传输尝试
+	else if(param->value[0] == 0x9a){//灰度传输尝试...成功！
 		// 在 epd_load_lut 或刷新逻辑中
 		gray_mode_refresh();
 	}

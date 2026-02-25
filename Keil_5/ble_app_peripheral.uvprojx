@@ -1542,11 +1542,6 @@
               <FilePath>..\src\epd\epd_math.c</FilePath>
             </File>
             <File>
-              <FileName>epd_gray_mode.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\src\epd\epd_gray_mode.c</FilePath>
-            </File>
-            <File>
               <FileName>epd_gray_texture.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\src\epd\epd_gray_texture.c</FilePath>
@@ -3091,11 +3086,6 @@
               <FilePath>..\src\epd\epd_math.c</FilePath>
             </File>
             <File>
-              <FileName>epd_gray_mode.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\src\epd\epd_gray_mode.c</FilePath>
-            </File>
-            <File>
               <FileName>epd_gray_texture.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\src\epd\epd_gray_texture.c</FilePath>
@@ -4587,11 +4577,6 @@
               <FileName>epd_math.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\src\epd\epd_math.c</FilePath>
-            </File>
-            <File>
-              <FileName>epd_gray_mode.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\src\epd\epd_gray_mode.c</FilePath>
             </File>
             <File>
               <FileName>epd_gray_texture.c</FileName>
@@ -6087,11 +6072,6 @@
               <FilePath>..\src\epd\epd_math.c</FilePath>
             </File>
             <File>
-              <FileName>epd_gray_mode.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\src\epd\epd_gray_mode.c</FilePath>
-            </File>
-            <File>
               <FileName>epd_gray_texture.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\src\epd\epd_gray_texture.c</FilePath>
@@ -7583,11 +7563,6 @@
               <FileName>epd_math.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\src\epd\epd_math.c</FilePath>
-            </File>
-            <File>
-              <FileName>epd_gray_mode.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\src\epd\epd_gray_mode.c</FilePath>
             </File>
             <File>
               <FileName>epd_gray_texture.c</FileName>

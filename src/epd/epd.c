@@ -85,7 +85,7 @@ static u8 lut_gray_step[76] = {
 
     0x01, 0x00, 0x00, 0x00, 0x01,  // Group0
     0x00, 0x00, 0x00, 0x00, 0x01,  // Group1
-    0x01, 0x02, 0x02, 0x00, 0x01,  // Group2
+    0x01, 0x00, 0x00, 0x00, 0x01,  // Group2
     0x00, 0x00, 0x00, 0x00, 0x01,  // Group3
     0x00, 0x00, 0x00, 0x00, 0x01,  // Group4
     0x00, 0x00, 0x00, 0x00, 0x01,  // Group5
@@ -354,7 +354,7 @@ void epd_update(void)
 	}else{
 		if(update_mode==UPDATE_FAST){
 			epd_load_lut(lut_fast);
-		}else if (update_mode==UPDATE_FAST){
+		}else if (update_mode==UPDATE_FLY){
 			epd_load_lut(lut_fly);
 		}else if(update_mode==UPDATE_GRAY){
 			//epd_gray_update(gray_step);
@@ -438,6 +438,10 @@ void epd_screen_clean(int mode)
 		}
 	}
 }
+
+
+
+
 
 
 /******************************************************************************/

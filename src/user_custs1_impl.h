@@ -49,7 +49,9 @@
  * DEFINES
  ****************************************************************************************
  */
-
+extern int year , month , date, wday;
+extern int l_year, l_month, l_date;
+extern int hour, minute, second;
 enum
 {
     CUSTS1_CP_ADC_VAL1_DISABLE = 0,

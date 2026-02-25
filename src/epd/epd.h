@@ -62,9 +62,9 @@ int  epd_detect(void);
 
 
 extern u8 lut_p[];
-// epd_gray相关
+// epd_sxtend相关
 void gray_mode_refresh(void);
-
+void custom_clock_draw(int flag);
 
 // epd_gui
 void draw_pixel(int x, int y, int color);
@@ -97,6 +97,7 @@ void draw_qr_code(
 void select_layout(int xres, int yres);
 
 void refresh_screen(int UPDATE_MODE);//广义上的刷新屏幕，只要调用这个就能集成掉用其他方法
+extern uint8_t redraw_dirty_mark;
 
 #define EPD_BW    0x00
 #define EPD_BWR   0x20
